@@ -1,8 +1,10 @@
 import OpenAI from 'openai';
 import { Category } from './constants';
+import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 
+// Initialize OpenAI with API key from environment variables
 const openai = new OpenAI({
-  apiKey: import.meta.env.VITE_OPENAI_API_KEY,
+  apiKey: import.meta.env.VITE_OPENAI_API_KEY || 'default-key',
   dangerouslyAllowBrowser: true
 });
 
@@ -13,15 +15,15 @@ Keep responses concise but informative, around 2-3 sentences.`;
 export const generateAIResponse = async (messages: { content: string; isAi: boolean }[], selectedCategory: Category | null) => {
   console.log('Generating AI response with messages:', messages);
   
-  const conversationHistory = messages.map(msg => ({
-    role: msg.isAi ? 'assistant' : 'user',
+  const conversationHistory: ChatCompletionMessageParam[] = messages.map(msg => ({
+    role: msg.isAi ? 'assistant' as const : 'user' as const,
     content: msg.content
   }));
 
   try {
     const completion = await openai.chat.completions.create({
       messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'system' as const, content: SYSTEM_PROMPT },
         ...conversationHistory
       ],
       model: 'gpt-4',
