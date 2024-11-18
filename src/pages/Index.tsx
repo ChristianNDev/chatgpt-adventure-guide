@@ -5,6 +5,8 @@ import { Sidebar } from "@/components/Sidebar";
 import { CategorySelector } from "@/components/CategorySelector";
 import { MessageInput } from "@/components/MessageInput";
 import { INITIAL_MESSAGE } from "@/lib/constants";
+import { generateAIResponse } from "@/lib/chat-service";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Message {
   content: string;
@@ -16,18 +18,30 @@ const Index = () => {
     { content: INITIAL_MESSAGE, isAi: true }
   ]);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
-  const handleSendMessage = (content: string) => {
-    // Add user message
-    setMessages(prev => [...prev, { content, isAi: false }]);
-    
-    // Simulate AI response
-    setTimeout(() => {
-      setMessages(prev => [...prev, {
-        content: `Here are some great recommendations for ${content}...`,
-        isAi: true
-      }]);
-    }, 1000);
+  const handleSendMessage = async (content: string) => {
+    try {
+      // Add user message
+      setMessages(prev => [...prev, { content, isAi: false }]);
+      setIsLoading(true);
+      
+      // Generate AI response
+      const aiResponse = await generateAIResponse([...messages, { content, isAi: false }], selectedCategory);
+      
+      // Add AI response
+      setMessages(prev => [...prev, { content: aiResponse, isAi: true }]);
+    } catch (error) {
+      console.error('Error in chat:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate response. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -54,7 +68,7 @@ const Index = () => {
           </div>
         </div>
         
-        <MessageInput onSendMessage={handleSendMessage} />
+        <MessageInput onSendMessage={handleSendMessage} isLoading={isLoading} />
       </main>
     </div>
   );

@@ -1,15 +1,18 @@
 import { useState } from "react";
+import { Button } from "./ui/button";
+import { Loader2 } from "lucide-react";
 
 interface MessageInputProps {
   onSendMessage: (message: string) => void;
+  isLoading?: boolean;
 }
 
-export const MessageInput = ({ onSendMessage }: MessageInputProps) => {
+export const MessageInput = ({ onSendMessage, isLoading = false }: MessageInputProps) => {
   const [message, setMessage] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (message.trim()) {
+    if (message.trim() && !isLoading) {
       onSendMessage(message);
       setMessage("");
     }
@@ -24,13 +27,18 @@ export const MessageInput = ({ onSendMessage }: MessageInputProps) => {
           onChange={(e) => setMessage(e.target.value)}
           placeholder="Ask about local places..."
           className="flex-1 p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+          disabled={isLoading}
         />
-        <button
-          type="submit"
-          className="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-md"
-        >
-          Send
-        </button>
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Thinking...
+            </>
+          ) : (
+            'Send'
+          )}
+        </Button>
       </div>
     </form>
   );
